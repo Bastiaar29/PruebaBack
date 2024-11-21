@@ -3,123 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Tareas</title>
+    <title>Gestión del Sistema</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
-<body class="bg-light">
-
+<body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="#">Gestión de Tareas</a>
+            <a class="navbar-brand" href="#">Gestión del Sistema</a>
         </div>
     </nav>
 
     <!-- Contenedor principal -->
     <div class="container">
         <div class="row">
-            <!-- Columna de Formulario de Creación -->
+            <!-- Columna de Gestión -->
             <div class="col-md-4">
-                <h2 class="mb-3">Crear Nueva Tarea</h2>
-                <form method="POST" action="{% url 'crear_tarea' %}">
+                <h2 class="mb-3">Registrar Asignatura</h2>
+                <form method="POST">
                     {% csrf_token %}
+                    <input type="hidden" name="registrar_asignatura" value="1">
                     <div class="mb-3">
-                        <label for="titulo" class="form-label">Título</label>
-                        <input type="text" class="form-control" name="titulo" id="titulo" required>
+                        <label for="nombre" class="form-label">Nombre de Asignatura</label>
+                        <input type="text" class="form-control" name="nombre" required>
                     </div>
                     <div class="mb-3">
-                        <label for="descripcion" class="form-label">Descripción</label>
-                        <textarea class="form-control" name="descripcion" id="descripcion" rows="3" required></textarea>
+                        <label for="horas" class="form-label">Horas Realizadas</label>
+                        <input type="number" class="form-control" name="horas" min="1" required>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Guardar Tarea</button>
+                    <button type="submit" class="btn btn-primary w-100">Registrar</button>
+                </form>
+                <hr>
+
+                <h2 class="mb-3">Registrar Asistencia</h2>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="registrar_asistencia" value="1">
+                    <div class="mb-3">
+                        <label for="asignacion" class="form-label">Seleccionar Asignación</label>
+                        <select class="form-select" name="asignacion">
+                            {% for asignacion in asignaciones %}
+                            <option value="{{ asignacion.id }}">{{ asignacion.alumno.usuario.username }} - {{ asignacion.asignatura.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Registrar</button>
                 </form>
             </div>
 
-            <!-- Columna de Lista de Tareas -->
+            <!-- Columna de Listados -->
             <div class="col-md-8">
-                <h2 class="mb-3">Lista de Tareas</h2>
-                {% if tareas %}
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th scope="col">ID</th>
-                                <th scope="col">Título</th>
-                                <th scope="col">Descripción</th>
-                                <th scope="col">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for tarea in tareas %}
-                                <tr>
-                                    <th scope="row">{{ tarea.id }}</th>
-                                    <td>{{ tarea.titulo }}</td>
-                                    <td>{{ tarea.descripcion }}</td>
-                                    <td>
-                                        <a href="#" class="btn btn-primary btn-sm me-2" data-bs-toggle="modal" 
-                                           data-bs-target="#editForm" data-id="{{ tarea.id }}" 
-                                           data-titulo="{{ tarea.titulo }}" data-descripcion="{{ tarea.descripcion }}">
-                                           Editar
-                                        </a>
-                                        <a href="{% url 'eliminar_tarea' tarea.id %}" class="btn btn-danger btn-sm">Eliminar</a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <p class="text-muted">No hay tareas disponibles.</p>
-                {% endif %}
+                <h2 class="mb-3">Lista de Asignaturas</h2>
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Horas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asignatura in asignaturas %}
+                        <tr>
+                            <td>{{ asignatura.nombre }}</td>
+                            <td>{{ asignatura.horas }}</td>
+                            <td>
+                                <form method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="editar_asignatura" value="1">
+                                    <input type="hidden" name="asignatura_id" value="{{ asignatura.id }}">
+                                    <input type="text" name="nombre" value="{{ asignatura.nombre }}" class="form-control mb-2">
+                                    <input type="number" name="horas" value="{{ asignatura.horas }}" class="form-control mb-2">
+                                    <button type="submit" class="btn btn-warning btn-sm">Actualizar</button>
+                                </form>
+                                <a href="{% url 'eliminar_asignatura' asignatura.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <h2 class="mb-3">Lista de Asistencias</h2>
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Alumno</th>
+                            <th>Asignatura</th>
+                            <th>Fecha</th>
+                            <th>Registrado Por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asistencia in asistencias %}
+                        <tr>
+                            <td>{{ asistencia.asignacion.alumno.usuario.username }}</td>
+                            <td>{{ asistencia.asignacion.asignatura.nombre }}</td>
+                            <td>{{ asistencia.fecha }}</td>
+                            <td>{{ asistencia.registrado_por.username }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Edición -->
-    <div class="modal fade" id="editForm" tabindex="-1" aria-labelledby="editFormLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editFormLabel">Editar Tarea</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form method="POST" id="formEditar">
-              {% csrf_token %}
-              <input type="hidden" name="id" id="id">
-              <div class="mb-3">
-                <label for="titulo_modal" class="form-label">Título</label>
-                <input type="text" class="form-control" name="titulo" id="titulo_modal" required>
-              </div>
-              <div class="mb-3">
-                <label for="descripcion_modal" class="form-label">Descripción</label>
-                <textarea class="form-control" name="descripcion" id="descripcion_modal" rows="3" required></textarea>
-              </div>
-              <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scripts de Bootstrap y el script personalizado -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      var editForm = document.getElementById("editForm");
-      editForm.addEventListener('show.bs.modal', function(event) {
-        var button = event.relatedTarget;
-        var id_number = button.getAttribute('data-id');
-        var titulo = button.getAttribute('data-titulo');
-        var descripcion = button.getAttribute('data-descripcion');
-
-        // Asignar valores directamente sin fetch
-        document.getElementById("titulo_modal").value = titulo;
-        document.getElementById("descripcion_modal").value = descripcion;
-
-        // Configura la acción del formulario con el ID correcto de la tarea
-        var formEditar = document.getElementById("formEditar");
-        formEditar.action = `/editar/${id_number}/`;
-      });
-    </script>
-
 </body>
 </html>
-
